@@ -17,7 +17,7 @@ Tested in
  - rabbit
  - nats
  - redis
- - aws
+ - aws (Read next)
 
 
 ## AWS
@@ -43,3 +43,46 @@ aws configure
 ```
 
 All informations can be found or generated in AWS Console > Your user (top-right) > Security Credentials.
+
+## LocalStack
+
+- [Install LocalStack CLI](https://docs.localstack.cloud/getting-started/installation/)
+
+If you need to validate your LocalStack configuration in `docker-compose`:
+
+```bash
+localstack config validate --file docker-compose.yaml
+```
+
+To open the dashboard:
+
+ - [WEB](https://app.localstack.cloud/dashboard)
+ - [Desktop](https://app.localstack.cloud/download)
+
+ ## User  Guides
+
+[User Guides](https://docs.localstack.cloud/user-guide/)
+
+## AWS CLI integration
+
+Inside your `~/.aws` directory, create `config` and `credentials` files with with the following content:
+
+config:
+
+```ini
+[profile default]
+region=us-east-1
+output=json
+endpoint_url = http://host.docker.internal:4566
+```
+
+credentials
+
+```ini
+[default]
+aws_access_key_id=test
+aws_secret_access_key=test
+```
+
+- Replace `[default]` and `[profile default]` with `[localstack]` and `[profile localstack]` if you want to keep your AWS account as the default.
+- Change `endpoint_url` from `http://host.docker.internal:4566` to `http://localhost:4566` if you’re not using the AWS CLI inside Docker..
