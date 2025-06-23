@@ -3,8 +3,10 @@ version: '3.1'
 services:
 
   postgres:
-    image: postgres
-    restart: always
+    build:
+      context: ./postgres
+      dockerfile: Dockerfile
+    restart: unless-stopped
     environment:
       POSTGRES_USER: erik
       POSTGRES_PASSWORD: erik
@@ -12,38 +14,46 @@ services:
       - "5432:5432"
     volumes:
       - db:/var/lib/postgresql/data
+    networks:
+      - local
 
   rabbit:
     image: rabbitmq:3-management
-    restart: always
+    restart: unless-stopped
     ports:
       - "15672:15672"
       - "5672:5672"
     volumes:
       - rabbit:/var/lib/rabbit/data
+    networks:
+      - local
 
   nats:
     image: nats
-    restart: always
+    restart: unless-stopped
     ports:
       - "4222:4222"
       - "6222:6222"
       - "8222:8222"
     volumes:
       - nats:/var/lib/nats/data
+    networks:
+      - local
 
   redis:
     image: redis/redis-stack:latest
-    restart: always
+    restart: unless-stopped
     ports:
       - "6379:6379"
       - "8001:8001"
     volumes:
       - redis:/var/lib/redis/data
+    networks:
+      - local
 
   mongo:
     image: mongo
-    restart: always
+    restart: unless-stopped
     ports:
       - 27017:27017
     volumes:
@@ -51,6 +61,54 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: erik
       MONGO_INITDB_ROOT_PASSWORD: erik
+    networks:
+      - local
+
+  # caddy:
+  #   image: caddy:2.10-alpine
+  #   restart: unless-stopped
+  #   cap_add:
+  #     - NET_ADMIN
+  #   ports:
+  #     - "9876:80"
+  #     - "9877:443"
+  #     - "9878:443/udp"
+  #   volumes:
+  #     - ./caddy/conf:/etc/caddy
+  #     # - ./caddy/site:/srv
+  #     - caddy_data:/data
+  #     - caddy_config:/config
+
+  # ollama:
+  #   image: ollama/ollama
+  #   container_name: ollama
+  #   ports:
+  #     - "11434:11434"
+  #   volumes:
+  #     - ollama_data:/root/.ollama
+  #     - ./ollama/model_files:/model_files
+  #     - ./ollama/run_ollama.sh:/run_ollama.sh
+  #   tty: true
+  #   entrypoint: ["/bin/sh", "/run_ollama.sh"]
+  #   deploy:
+  #     resources:
+  #       reservations:
+  #         devices:
+  #           - capabilities: [gpu]
+
+  # open-webui:
+  #   build:
+  #     context: ./ollama
+  #     dockerfile: Open-WebUI.Dockerfile
+  #   container_name: open-webui
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - OLLAMA_API_BASE_URL=http://ollama:11434
+  #     - WEBUI_SECRET_KEY=supersecret123
+  #     - WEBUI_AUTH=false
+  #   depends_on:
+  #     - ollama
 
 volumes:
   db:
@@ -63,3 +121,13 @@ volumes:
     driver: local
   redis:
     driver: local
+  caddy:
+    driver: local
+  # caddy_data:
+  # caddy_config:
+  # ollama_data:
+
+networks:
+  local:
+    name: 'local'
+    driver: bridge
